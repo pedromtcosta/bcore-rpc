@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "fp-ts": "^2.16.1",
+    "io-ts": "^2.2.20"
+  }
+}
