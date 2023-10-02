@@ -15,9 +15,4 @@ export const buildBitcoinCoreRpc = (host: string, port:number, {
     protocol,
     credentials,
   });
-
-  const tryCatchRpcCommand = (method: string, params: any[] = []) => TE.tryCatch(
-    () => callRpcCommand(method, params),
-    (e) => new Error(String(e)),
-  );
 };
