@@ -1,6 +1,6 @@
 import * as iots from 'io-ts';
 
-const undefineable = <T>(type: iots.Type<T>): iots.Type<T | undefined> => iots.union([type, iots.undefined]);
+const optional = <T>(type: iots.Type<T>): iots.Type<T | undefined> => iots.union([type, iots.undefined]);
 
 const isHexadecimal = (input: string): boolean => /^[0-9A-Fa-f]+$/.test(input);
 const hex: iots.Type<string> = new iots.Type<string>(
@@ -37,15 +37,15 @@ export const getBlockSchema = (() => {
     difficulty: iots.number,
     chainwork: hex,
     nTx: iots.number,
-    previousblockhash: undefineable(hex),
-    nextblockhash: undefineable(hex),
+    previousblockhash: optional(hex),
+    nextblockhash: optional(hex),
   };
 
   const scriptPubKeySchema = {
     asm: iots.string,
     desc: iots.string,
     hex: hex,
-    address: undefineable(iots.string),
+    address: optional(iots.string),
     type: iots.union([
       iots.literal('nonstandard'),
       iots.literal('pubkey'),
@@ -61,14 +61,14 @@ export const getBlockSchema = (() => {
   };
 
   const vinSchema = {
-    coinbase: undefineable(hex),
-    txid: undefineable(hex),
-    vout: undefineable(iots.number),
-    scriptSig: undefineable(iots.type({
+    coinbase: optional(hex),
+    txid: optional(hex),
+    vout: optional(iots.number),
+    scriptSig: optional(iots.type({
       asm: iots.string,
       hex: iots.union([hex, iots.literal('')]),
     }, 'scriptSig')),
-    txinwitness: undefineable(
+    txinwitness: optional(
       iots.array(
         iots.union([iots.literal(''), hex]),
         'txinwitness'
@@ -91,7 +91,7 @@ export const getBlockSchema = (() => {
       n: iots.number,
       scriptPubKey: iots.type(scriptPubKeySchema)
     }, 'vout_item'), 'vout'),
-    fee: undefineable(iots.number),
+    fee: optional(iots.number),
     hex: hex,
   };
 
@@ -99,7 +99,7 @@ export const getBlockSchema = (() => {
     ...txVerbosity1,
     vin: iots.array(iots.type({
       ...vinSchema,
-      prevout: undefineable(iots.type({
+      prevout: optional(iots.type({
         generated: iots.boolean,
         height: iots.number,
         value: iots.number,
@@ -132,3 +132,118 @@ export const getBlockSchema = (() => {
     }
   }
 })();
+
+export const getBlockchainInfoSchema = iots.type({
+  chain: iots.string,
+  blocks: iots.number,
+  headers: iots.number,
+  bestblockhash: hex,
+  difficulty: iots.number,
+  time: iots.number,
+  mediantime: iots.number,
+  verificationprogress: iots.number,
+  initialblockdownload: iots.boolean,
+  chainwork: hex,
+  size_on_disk: iots.number,
+  pruned: iots.boolean,
+  pruneheight: optional(iots.number),
+  automatic_pruning: optional(iots.boolean),
+  prune_target_size: optional(iots.number),
+  warnings: iots.string,
+});
+
+export const getBlockCountSchema = iots.number;
+
+export const getBlockFilterSchema = iots.type({
+  filter: hex,
+  header: hex,
+});
+
+export const getBlockFromPeerSchema = iots.any;
+
+export const getBlockHashSchema = hex;
+
+export const getBlockHeaderSchema = (() => {
+  const blockHeaderSchema = {
+    hash: hex,
+    confirmations: iots.number,
+    height: iots.number,
+    version: iots.number,
+    versionHex: hex,
+    merkleroot: hex,
+    time: iots.number,
+    mediantime: iots.number,
+    nonce: iots.number,
+    bits: hex,
+    difficulty: iots.number,
+    chainwork: hex,
+    nTx: iots.number,
+    previousblockhash: optional(hex),
+    nextblockhash: optional(hex),
+  };
+
+  return {
+    variants: {
+      verboseFalse: hex,
+      verboseTrue: iots.type(blockHeaderSchema, 'blockHeader'),
+    }
+  }
+})();
+
+export const getBlockStatsSchema = iots.type({
+  avgfee: iots.number,
+  avgfeerate: optional(iots.number),
+  avgtxsize: optional(iots.number),
+  blockhash: optional(hex),
+  feerate_percentiles: optional(iots.array(iots.number, 'feerate_percentiles')),
+  height: optional(iots.number),
+  ins: optional(iots.number),
+  maxfee: optional(iots.number),
+  maxfeerate: optional(iots.number),
+  maxtxsize: optional(iots.number),
+  medianfee: optional(iots.number),
+  mediantime: optional(iots.number),
+  mediantxsize: optional(iots.number),
+  minfee: optional(iots.number),
+  minfeerate: optional(iots.number),
+  mintxsize: optional(iots.number),
+  outs: optional(iots.number),
+  subsidy: optional(iots.number),
+  swtotal_size: optional(iots.number),
+  swtotal_weight: optional(iots.number),
+  swtxs: optional(iots.number),
+  time: optional(iots.number),
+  total_out: optional(iots.number),
+  total_size: optional(iots.number),
+  total_weight: optional(iots.number),
+  totalfee: optional(iots.number),
+  txs: optional(iots.number),
+  utxo_increase: optional(iots.number),
+  utxo_size_inc: optional(iots.number),
+  utxo_increase_actual: optional(iots.number),
+  utxo_size_inc_actual: optional(iots.number),
+});
+
+export const getChainTipsSchema = iots.array(iots.type({
+  height: iots.number,
+  hash: hex,
+  branchlen: iots.number,
+  status: iots.union([
+    iots.literal('invalid'),
+    iots.literal('headers-only'),
+    iots.literal('valid-headers'),
+    iots.literal('valid-fork'),
+    iots.literal('active'),
+  ], 'status'),
+}));
+
+export const getChainTxStatsSchema = iots.type({
+  time: iots.number,
+  txcount: iots.number,
+  window_final_block_hash: hex,
+  window_final_block_height: iots.number,
+  window_block_count: iots.number,
+  window_tx_count: optional(iots.number),
+  window_interval: optional(iots.number),
+  txrate: optional(iots.number),
+});
